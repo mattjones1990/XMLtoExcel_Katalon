@@ -12,9 +12,8 @@ namespace KatalonXMLtoExcel
         {
             List<string[]> headerRow1 = new List<string[]>()
                 {
-                    new string[] { "Test Suite", "Scenario Definition", "Total Test Cases", "Test Cases Passed", "Test Cases Errored", "Test Cases Failed"
-                    
-                    , "Test Status", "Failed Test Description" }
+                    new string[] { "Test Suite", "Scenario Definition", "Total Test Cases", "Test Cases Passed", "Test Cases Errored",
+                        "Test Cases Failed", "Errored Test Description", "Test Status", "Failed Test Description" }
                 };
 
             List<string[]> headerRow2 = new List<string[]>()

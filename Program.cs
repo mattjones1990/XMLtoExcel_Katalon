@@ -42,6 +42,10 @@ namespace KatalonXMLtoExcel
             int totalFailures = 0;
             int totalErrors = 0;
 
+            int finalTest = 0;
+            int finalFailures = 0;
+            int finalErrors = 0;
+
             string testSuitesName = testsuitesList[0].Attributes.GetNamedItem("name").InnerText;
 
             using (ExcelPackage excel = new ExcelPackage())
@@ -104,6 +108,40 @@ namespace KatalonXMLtoExcel
 
                     XmlNodeList testCaseList = node.SelectNodes("testcase"); //working
 
+                    //Long way of doing all this, but I was running out of time...
+
+
+                    //For 'passes'
+                    foreach (XmlNode item in testCaseList)
+                    {
+                        XmlNodeList failedTestCases = item.SelectNodes("failure");
+                        XmlNodeList erroredTestCases = item.SelectNodes("error");
+
+                        bool passCount = false;
+
+                        if (failedTestCases.Count < 1 && erroredTestCases.Count < 1) {
+                            passCount = true;
+                        }
+
+                        if (passCount && addInitialRowOfData == 0)
+                        {
+                            //Add testsuite name
+                            excelWorksheet2.Cells["A" + worksheet2Row.ToString()].Value = testSuitesName;
+
+                            //Add scenario definition
+                            excelWorksheet2.Cells["B" + worksheet2Row.ToString()].Value = XmlFactory.GetInnerText(node, "name");
+                            addInitialRowOfData++;
+                        }
+
+                        if (passCount)
+                        {
+                            excelWorksheet2.Cells["C" + worksheet2Row.ToString()].Value = XmlFactory.GetInnerText(item, "name");
+                            excelWorksheet2.Cells["D" + worksheet2Row.ToString()].Value = "Passed";
+                            worksheet2Row++;
+                        }
+                    }
+
+                    //For 'fails'
                     foreach (XmlNode item in testCaseList)
                     {
                         XmlNodeList failedTestCases = item.SelectNodes("failure");
@@ -129,6 +167,7 @@ namespace KatalonXMLtoExcel
                         }                   
                     }
 
+                    //For 'errors'
                     foreach (XmlNode item in testCaseList)
                     {
                         XmlNodeList erroredTestCases = item.SelectNodes("error");
@@ -152,15 +191,24 @@ namespace KatalonXMLtoExcel
 
                             //System-Out and System-Err nodes
                             XmlNodeList systemOut = item.SelectNodes("system-out");
-                            XmlNodeList systemErr = item.SelectNodes("system-err");
-
+                            XmlNodeList systemErr = item.SelectNodes("system-err");                            
                             excelWorksheet2.Cells["E" + worksheet2Row.ToString()].Value = systemOut[0].InnerText;
                             excelWorksheet2.Cells["F" + worksheet2Row.ToString()].Value = systemErr[0].InnerText;
 
+                            //Stacktrace
                             excelWorksheet2.Cells["G" + worksheet2Row.ToString()].Value = XmlFactory.GetInnerText(erroredTestCases[0], "message");
                             worksheet2Row++;
                         }
                     }
+
+                    finalTest = finalTest + totalTests;
+                    finalFailures = finalFailures + totalFailures;
+                    finalErrors = finalErrors + totalErrors;
+
+                    totalTests = 0;
+                    totalFailures = 0;
+                    totalErrors = 0;
+
                     #endregion
                 }
 
@@ -168,7 +216,7 @@ namespace KatalonXMLtoExcel
                 ExcelFactory.SaveSpreadsheet(directory, excel);
             }
 
-            WritingTextOutput.TestStats(totalTests, totalFailures, totalErrors);
+            WritingTextOutput.TestStats(finalTest, finalFailures, finalErrors);
             Console.ReadLine();
         }
     }
